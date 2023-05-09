@@ -1,7 +1,11 @@
-
+-- Cleaning data in SQL Queries --
 
 SELECT *
 FROM NashvilleHousing
+
+----------------------------------------------------------------------------------------------------------------------------
+
+-- Standardize Date Format
 
 SELECT SaleDate, CONVERT(Date,SaleDate)
 FROM NashvilleHousing
@@ -14,6 +18,10 @@ SET SaleDateConverted = CONVERT(Date,SaleDate)
 
 SELECT SaleDate, SaleDateConverted
 FROM NashvilleHousing
+
+----------------------------------------------------------------------------------------------------------------------------
+
+-- Populate Property Address data
 
 SELECT *
 FROM NashvilleHousing
@@ -41,6 +49,10 @@ ON a.ParcelID = b.ParcelID
 AND a.[UniqueID ]<>b.[UniqueID ]
 WHERE a.PropertyAddress IS NULL
 
+----------------------------------------------------------------------------------------------------------------------------
+
+-- Spliting Address into Seperated Columns (Addess, City, State)
+
 SELECT PropertyAddress
 FROM NashvilleHousing
 
@@ -63,6 +75,10 @@ SET PropertySplitCity = RIGHT(PropertyAddress, (LEN(PropertyAddress) - CHARINDEX
 
 SELECT *
 FROM NashvilleHousing
+
+----------------------------------------------------------------------------------------------------------------------------
+
+-- Spliting Owner Address into Seperated Columns (Addess, City, State) in different way.
 
 SELECT OwnerAddress
 FROM NashvilleHousing
@@ -93,6 +109,10 @@ SET OwnerSplitState = PARSENAME(REPLACE(OwnerAddress,',','.'), 1)
 SELECT *
 FROM NashvilleHousing
 
+----------------------------------------------------------------------------------------------------------------------------
+
+-- Change 'Y' and 'N' to 'Yes' and 'No' in "Sold As Vacant" field
+
 SELECT DISTINCT(SoldAsVacant), COUNT(SoldAsVacant)
 FROM NashvilleHousing
 GROUP BY SoldAsVacant
@@ -111,20 +131,39 @@ WHEN SoldAsVacant = 'N' THEN 'No'
 ELSE SoldAsVacant
 END
 
+----------------------------------------------------------------------------------------------------------------------------
+
+-- Remove Duplicated rows
+
 WITH t1 AS(
 SELECT *, ROW_NUMBER() OVER (PARTITION BY ParcelID, 
-										  PropertyAddress, 
-										  SalePrice, 
-										  SaleDate,
-										  LegalReference
-										  ORDER BY 
-											UniqueID)
-											rownum
-FROM NashvilleHousing)
-
+					  PropertyAddress, 
+					  SalePrice, 
+					  SaleDate,
+					  LegalReference
+					  ORDER BY UniqueID) as rownum
+FROM NashvilleHousing
+)
 SELECT *
 FROM t1
 WHERE rownum > 1
+
+WITH t1 AS(
+SELECT *, ROW_NUMBER() OVER (PARTITION BY ParcelID, 
+					  PropertyAddress, 
+					  SalePrice, 
+					  SaleDate,
+					  LegalReference
+					  ORDER BY UniqueID) as rownum
+FROM NashvilleHousing
+)
+DELETE
+FROM t1
+WHERE rownum > 1
+
+----------------------------------------------------------------------------------------------------------------------------
+
+-- Delete Unused Columns
 
 ALTER TABLE NashvilleHousing
 DROP COLUMN OwnerAddress, TaxDistrict, PropertyAddress
